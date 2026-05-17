@@ -8,16 +8,11 @@ import "android.app.*"
 import "com.androlua.Http"
 import "cjson"
 
--- Persistent Settings
 local prefs = service.getSharedPreferences("GeminiTyperSettings", Context.MODE_PRIVATE)
 local editor = prefs.edit()
 
--- Version Management
 local default_version = "1.0"
 local current_version = prefs.getString("app_version", default_version)
-local version_url = "https://raw.githubusercontent.com/shahzaibmemon7856-tech/Sindhi-typer-/refs/heads/main/virgin%20.txt"
-local notes_url = "https://raw.githubusercontent.com/shahzaibmemon7856-tech/Sindhi-typer-/refs/heads/main/notes%20.txt"
-local update_lua_url = "https://raw.githubusercontent.com/shahzaibmemon7856-tech/Sindhi-typer-/refs/heads/main/update%20.lua"
 
 local GEMINI_API_KEY = prefs.getString("api_key", "")
 local selectedModel = prefs.getString("selected_model", "gemini-1.5-flash")
@@ -36,11 +31,6 @@ function restartPlugin()
   end)
 end
 
-function saveNewVersion(ver)
-  editor.putString("app_version", ver).commit()
-end
-
--- About Dialog Function
 function showAboutDialog()
   local builder = AlertDialog.Builder(service)
   builder.setTitle("About Gemini Typer Pro")
@@ -52,11 +42,11 @@ function showAboutDialog()
   local aboutText = TextView(service)
   aboutText.setTextSize(16)
   aboutText.setText(
-    "馃殌 App Name: Gemini Typer Pro\n" ..
-    "馃摝 Version: " .. current_version .. "\n" ..
-    "馃懆鈥嶐煉� Developer: Shahzaib Memon\n" ..
-    "馃敡 Language: Lua (AndroLua)\n\n" ..
-    "馃摐 Description:\n" ..
+    "🚀 App Name: Gemini Typer Pro\n" ..
+    "📦 Version: " .. current_version .. "\n" ..
+    "👨‍💻 Developer: Shahzaib Memon\n" ..
+    "🔨 Language: Lua (AndroLua)\n\n" ..
+    "📄 Description:\n" ..
     "This plugin uses Google Gemini AI to provide professional Sindhi voice typing. " ..
     "It supports Roman Sindhi conversion and grammar correction for both Pakistan and India scripts."
   )
@@ -69,62 +59,6 @@ function showAboutDialog()
   local diag = builder.create()
   diag.getWindow().setType(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY)
   diag.show()
-end
-
-function showUpdateDialog(new_ver, notes)
-  local builder = AlertDialog.Builder(service)
-  builder.setTitle("New Update Available!")
-  
-  local layout = LinearLayout(service)
-  layout.setOrientation(1)
-  layout.setPadding(40, 20, 40, 20)
-  
-  local txtNotes = TextView(service)
-  txtNotes.setTextSize(16)
-  txtNotes.setText("Version: " .. new_ver .. "\n\nWhat's New:\n" .. (notes or "Minor improvements."))
-  layout.addView(txtNotes)
-  
-  builder.setView(layout)
-  builder.setPositiveButton("Update Now", {onClick=function()
-    service.speak("Updating please wait")
-    Http.get(update_lua_url, function(code, content)
-      if code == 200 then
-        local path = service.getFilesDir().getAbsolutePath() .. "/main.lua"
-        local f = io.open(path, "w")
-        f:write(content)
-        f:close()
-        saveNewVersion(new_ver)
-        service.speak("Update successful")
-        restartPlugin()
-      else
-        service.speak("Update failed")
-      end
-    end)
-  end})
-  builder.setNegativeButton("Later", nil)
-  
-  local diag = builder.create()
-  diag.getWindow().setType(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY)
-  diag.show()
-end
-
-function checkUpdates(isManual)
-  Http.get(version_url, function(code, server_version)
-    if code == 200 and server_version then
-      local clean_server_ver = server_version:gsub("%s+", "")
-      local clean_current_ver = current_version:gsub("%s+", "")
-      
-      if clean_server_ver ~= clean_current_ver then
-        Http.get(notes_url, function(code2, notes)
-          showUpdateDialog(clean_server_ver, notes)
-        end)
-      else
-        if isManual then 
-          print("App is up to date: " .. current_version) 
-        end
-      end
-    end
-  end)
 end
 
 function processWithGemini(rawText, mode, isRomanChecked, callback)
@@ -170,7 +104,7 @@ function startVoiceTyping(isRomanChecked)
     return
   end
 
-  local intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+  local intent = Intent(RecognizerIntent.ACTION_RECOGOC_SPEECH)
   intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
   
   if isRomanChecked then
@@ -280,17 +214,11 @@ function showMainUI()
   local footerLayout = LinearLayout(service)
   footerLayout.setOrientation(0)
   
-  -- About Button Added Before Check Update
   local btnAbout = Button(service)
   btnAbout.setText("ABOUT")
   local lp = LinearLayout.LayoutParams(0, -2, 1)
   btnAbout.setLayoutParams(lp)
   footerLayout.addView(btnAbout)
-
-  local btnUpdate = Button(service)
-  btnUpdate.setText("CHECK UPDATE")
-  btnUpdate.setLayoutParams(lp)
-  footerLayout.addView(btnUpdate)
 
   local btnExit = Button(service)
   btnExit.setText("EXIT")
@@ -318,13 +246,8 @@ function showMainUI()
     showAiEngineDialog()
   end}
 
-  -- About Button Click Event
   btnAbout.setOnClickListener{onClick=function()
     showAboutDialog()
-  end}
-
-  btnUpdate.setOnClickListener{onClick=function()
-    checkUpdates(true)
   end}
 
   btnExit.setOnClickListener{onClick=function()
@@ -333,7 +256,6 @@ function showMainUI()
   end}
 
   mainDialog.show()
-  checkUpdates(false)
 end
 
 showMainUI()
